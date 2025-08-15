@@ -19,7 +19,9 @@ app.register_blueprint(user_bp, url_prefix='/api')
 app.register_blueprint(event_bp, url_prefix='/api')
 
 # Configuração do banco de dados
-app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(os.path.dirname(__file__), 'database', 'app.db')}"
+# O aplicativo agora usará a variável de ambiente 'DATABASE_URL' se existir, 
+# caso contrário, usará o banco de dados SQLite local.
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL") or f"sqlite:///{os.path.join(os.path.dirname(__file__), 'database', 'app.db')}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Importa todos os modelos para garantir que sejam criados
@@ -35,7 +37,7 @@ with app.app_context():
 def serve(path):
     static_folder_path = app.static_folder
     if static_folder_path is None:
-            return "Static folder not configured", 404
+        return "Static folder not configured", 404
 
     if path != "" and os.path.exists(os.path.join(static_folder_path, path)):
         return send_from_directory(static_folder_path, path)
@@ -45,7 +47,6 @@ def serve(path):
             return send_from_directory(static_folder_path, 'index.html')
         else:
             return "index.html not found", 404
-
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
